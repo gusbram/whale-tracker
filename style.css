@@ -11,6 +11,8 @@
 
 * { box-sizing: border-box; }
 
+html, body { max-width: 100%; overflow-x: hidden; }
+
 body {
   margin: 0;
   background: var(--bg);
@@ -76,8 +78,11 @@ body {
   grid-template-columns: 1fr 1fr;
   gap: 14px;
   margin-bottom: 14px;
+  min-width: 0;
 }
 
+.stat-row, .insight-grid, .mini-gauges { min-width: 0; }
+.main-row > .panel, .insight-grid > .panel, .mini-gauges > * { min-width: 0; }
 .insight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
 .history-grid > .panel { min-height: 270px; display: flex; flex-direction: column; }
 .history-grid > .panel > .panel-header { flex: 0 0 auto; }
@@ -85,6 +90,7 @@ body {
 .market-context, .consensus-list, .position-history, .leaderboard { display: grid; gap: 7px; }
 .market-row, .consensus-row, .history-row, .leader-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--border); padding: 8px 2px; font-size: 12px; }
 .market-row { display: grid; grid-template-columns: 70px 115px 110px minmax(145px, 1fr) 100px; justify-content: start; }
+.market-row > * { min-width: 0; }
 .market-row:last-child, .consensus-row:last-child, .history-row:last-child, .leader-row:last-child { border-bottom: 0; }
 .market-row span, .consensus-row > span, .leader-row > span { color: var(--muted); }
 .market-row b { color: var(--text); }
@@ -92,7 +98,7 @@ body {
 .market-indication.pos { color: var(--green); }
 .market-indication.neg { color: var(--red); }
 .market-indication.neutral { color: var(--muted); }
-.market-guide { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); color: var(--muted); font-size: 11px; line-height: 1.5; }
+.market-guide { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); color: var(--muted); font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
 .consensus-row > div { display: flex; align-items: center; gap: 8px; }
 .consensus-side { border-radius: 999px; padding: 3px 7px; font-size: 10px; font-weight: 700; }
 .consensus-side.long { color: var(--green); background: rgba(34,197,94,0.12); }
@@ -513,6 +519,9 @@ tr.row-changed td {
   .coin-row-top { align-items: flex-start; flex-direction: column; }
   .coin-actions { width: 100%; justify-content: space-between; }
   .coin-row-bottom { align-items: flex-start; flex-direction: column; gap: 3px; }
+  .market-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .market-row > strong { grid-column: 1 / -1; }
+  .market-row > span { white-space: normal; overflow-wrap: anywhere; }
   .positioning-details { grid-template-columns: 1fr; }
   .positioning-read { grid-column: auto; }
   .notification-item { flex-direction: column; gap: 3px; }
