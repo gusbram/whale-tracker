@@ -87,9 +87,9 @@ body {
 .history-grid > .panel { min-height: 270px; display: flex; flex-direction: column; }
 .history-grid > .panel > .panel-header { flex: 0 0 auto; }
 .history-grid .exposure-chart, .history-grid .position-history { flex: 1; min-height: 0; }
-.market-context, .consensus-list, .position-history, .leaderboard { display: grid; gap: 7px; }
+.market-context, .consensus-list, .position-history, .leaderboard { display: grid; gap: 7px; min-width: 0; max-width: 100%; }
 .market-row, .consensus-row, .history-row, .leader-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--border); padding: 8px 2px; font-size: 12px; }
-.market-row { display: grid; grid-template-columns: 70px 115px 110px minmax(145px, 1fr) 100px; justify-content: start; }
+.market-row { display: grid; width: 100%; max-width: 100%; grid-template-columns: 70px 115px 110px minmax(0, 1fr) 100px; justify-content: start; overflow: hidden; }
 .market-row > * { min-width: 0; }
 .market-row:last-child, .consensus-row:last-child, .history-row:last-child, .leader-row:last-child { border-bottom: 0; }
 .market-row span, .consensus-row > span, .leader-row > span { color: var(--muted); }
@@ -98,7 +98,7 @@ body {
 .market-indication.pos { color: var(--green); }
 .market-indication.neg { color: var(--red); }
 .market-indication.neutral { color: var(--muted); }
-.market-guide { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); color: var(--muted); font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
+.market-guide { width: 100%; max-width: 100%; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); color: var(--muted); font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
 .consensus-row > div { display: flex; align-items: center; gap: 8px; }
 .consensus-side { border-radius: 999px; padding: 3px 7px; font-size: 10px; font-weight: 700; }
 .consensus-side.long { color: var(--green); background: rgba(34,197,94,0.12); }
