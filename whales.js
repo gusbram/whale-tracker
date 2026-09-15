@@ -1,0 +1,57 @@
+// Daftar address whale, diberi label Whale #1, #2, dst sesuai URUTAN yang diberikan.
+// Vault (bukan address wallet biasa) ditandai isVault: true dan di-skip dari clearinghouseState
+// karena endpoint vault state berbeda (vaultDetails), tidak didukung di versi ini.
+
+const WHALE_LIST = [
+  { id: 1,  address: "0xb83de012dba672c76a7dbbbf3e459cb59d7d6e36" },
+  { id: 2,  address: "0x020ca66c30bec2c4fe3861a94e4db4a498a35872" },
+  { id: 3,  address: "0x0392a716dbee1661ea781881826b928daeb5d7d9" },
+  { id: 4,  address: "0x15a4f009bb324a3fb9e36137136b201e3fe0dfdb" },
+  { id: 5,  address: "0xecb63caa47c7c4e77f60f1ce858cf28dc2b82b00" },
+  { id: 6,  address: "0x469e9a7f624b04c24f0e64edf8d8a277e6bf58a5" },
+  { id: 7,  address: "0xde8d9e530b0528ffa7b1190f862536c055dd9524" },
+  { id: 8,  address: "0xf02d16a272a842f8bac1d9a9e773aba1933454c6" },
+  { id: 9,  address: "0x9c6a5b4662c722d2c47f43d6c9813cb080ffa4ed" },
+  { id: 10, address: "0x60468ba27448f88b19f52ed02f1a8c52f7a0b21d" },
+  { id: 11, address: "0xedcdcaa1f18350c50c10bef860e64daa9785d05a" },
+  { id: 12, address: "0xa61c57d0d1a83c02542092b431999b9870dd66b9" },
+  { id: 13, address: "0x4e23288cee4960f9f962195c22948e4bc7ae20c3" },
+  { id: 14, address: "0x92ea19eceb7a8de0f50978a1583a5d8b018050e9" },
+  { id: 15, address: "0xf517639a8872e756ac98d3c65507d2ebc25cc032" },
+  { id: 16, address: "0x32008fcb6bbd16532afc83ca8b6c920dde22c407" },
+  { id: 17, address: "0xec4a6f59960fb55a7fa49262e2628687b322cf62" },
+  { id: 18, address: "0xc63a0f0db2c9604283172e83bd035902e0f0a3cd" },
+  { id: 19, address: "0x09dccb6f33b986987457d33db6801b74d2a2c094" },
+  { id: 20, address: "0x77eeda199553e33b246e4b4666849b9ad0972902" },
+  { id: 21, address: "0xfc667adba8d4837586078f4fdcdc29804337ca06" },
+  { id: 22, address: "0x66f889094739dbb7d20aa60f645acd88feba75a9" },
+  { id: 23, address: "0x0c4a3a7ac74d43732f9b5ea507f01ab72a381b19" },
+  { id: 24, address: "0xa9b95f2a2e7ef219021efc5c04c32761b8553bbd" },
+  { id: 25, address: "0x362ad6209a5e904a5569f69884375809c5781d9f" },
+  { id: 26, address: "0x1bbfb3a33600338d5a948618189649a4588d5fc4" },
+  { id: 27, address: "0x8def9f50456c6c4e37fa5d3d57f108ed23992dae" },
+  { id: 28, address: "0x152e41f0b83e6cad4b5dc730c1d6279b7d67c9dc" },
+  { id: 29, address: "0x61ceef212ff4a86933c69fb6aca2fe35d8f2a62b" },
+  { id: 30, address: "0x9546b9d4103be41ce13483a8f299d0df0eeb181c" },
+  { id: 31, address: "0x4f12b217aa59e6d3e1f91ca2dc96f9543576618b" },
+  { id: 32, address: "0xb1ec7febea4f841d525785955b7fe0e812d6e86a" },
+  { id: 33, address: "0xccf3fff396a14d55d93366f870c007425e9f2a75" },
+  { id: 34, address: "0x17c3c8fdbcb7d1b240ce08965e09b1fc91cba868" },
+  { id: 35, address: "0x90b5e0c5ca3b0c0c47b575b0f62c07eb8b39b010" },
+  { id: 36, address: "0xf5a523b171032c060d49c39fbf2e9bec473e1286" },
+  { id: 37, address: "0x92b75a5bfb7be7911747276ad335b8f5da3ce0f4" },
+  // vault — dilewati dari fetch clearinghouseState (lihat catatan di atas)
+  { id: 38, address: "0xb0a55f13d22f66e6d495ac98113841b2326e9540", isVault: true },
+  { id: 39, address: "0xab5e6f394951c28ab1873007e373202689cdbec3" },
+  { id: 40, address: "0xa6181aac4474b43c3ca575ac8b1ad17643ec20b8" },
+  { id: 41, address: "0x9137bd9347f07990a8ce22869f8b93d190479c5a" },
+  { id: 42, address: "0xc8b527864ef2ad6dc49de7e99943a3a76ad48891" },
+  { id: 43, address: "0x10f1d87fbb7617df5641d1c2bcb26f143f43202f" },
+  { id: 44, address: "0x1367df28c0681431b8a8f3d887576a1cad85560e" },
+  { id: 45, address: "0x9e2cbb5d800181c1ef21b25010dc4ea80eeb5508" },
+  { id: 46, address: "0x89da4baec446f35a1cbe17a9d1ee5c70b05ee43f" },
+  { id: 47, address: "0x8c028b7c65d86d9721874c87819c6196e6cdb73f" },
+  // address terakhir di daftar user sama persis dengan id 33 (duplikat) — di-skip otomatis oleh dedup di app.js
+];
+
+if (typeof module !== "undefined") module.exports = WHALE_LIST;
