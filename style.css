@@ -17,7 +17,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 14px;
 }
 
@@ -29,6 +29,7 @@ body {
   border-bottom: 1px solid var(--border);
 }
 
+.topbar-actions { display: flex; align-items: center; gap: 14px; }
 .brand { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 700; }
 .brand .accent { color: var(--accent); }
 .updated { color: var(--muted); font-size: 13px; display: flex; align-items: center; gap: 14px; }
@@ -53,6 +54,43 @@ body {
   cursor: pointer;
 }
 .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.theme-toggle-icon { width: 14px; text-align: center; font-size: 15px; line-height: 1; }
+.theme-toggle-track {
+  position: relative;
+  display: inline-block;
+  width: 30px;
+  height: 17px;
+  border: 1px solid var(--muted);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  transition: background 0.2s, border-color 0.2s;
+}
+.theme-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--accent);
+  transition: transform 0.2s;
+}
+.theme-toggle.is-light .theme-toggle-track { background: rgba(249,115,22,0.15); border-color: var(--accent); }
+.theme-toggle.is-light .theme-toggle-thumb { transform: translateX(13px); }
+.theme-toggle:hover { color: var(--text); }
 
 .container { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
 
@@ -88,6 +126,8 @@ body {
 .history-grid > .panel > .panel-header { flex: 0 0 auto; }
 .history-grid .exposure-chart, .history-grid .position-history { flex: 1; min-height: 0; }
 .market-context, .consensus-list, .position-history, .leaderboard { display: grid; gap: 7px; min-width: 0; max-width: 100%; }
+.market-context { max-height: 380px; overflow-y: auto; padding-right: 6px; }
+.consensus-list { max-height: 380px; overflow-y: auto; padding-right: 6px; }
 .market-row, .consensus-row, .history-row, .leader-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--border); padding: 8px 2px; font-size: 12px; }
 .market-row { display: grid; width: 100%; max-width: 100%; grid-template-columns: 70px 115px 110px minmax(0, 1fr) 100px; justify-content: start; overflow: hidden; }
 .market-row > * { min-width: 0; }
@@ -115,6 +155,25 @@ body {
 .history-time { color: var(--muted); min-width: 58px; font-size: 10px; }
 .history-grid .position-history { max-height: 205px; overflow-y: auto; padding-right: 4px; }
 .leaderboard-panel { margin-top: 14px; }
+.leaderboard { max-height: 380px; overflow-y: auto; padding-right: 6px; }
+.leaderboard-controls { display: flex; align-items: center; gap: 8px; }
+.leaderboard-sort-btn {
+  background: rgba(255,255,255,0.03);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 4px 7px;
+  font-size: 10px;
+  cursor: pointer;
+}
+.leaderboard-sort-btn.active,
+.leaderboard-sort-btn:hover { color: var(--text); border-color: var(--accent); }
+.leaderboard-footer {
+  justify-content: flex-end;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
 .leader-row { justify-content: flex-start; }
 .leader-rank { width: 20px; color: var(--muted); }
 .leader-row strong { min-width: 90px; }
@@ -149,6 +208,7 @@ body {
 .positioning-detail strong { font-size: 14px; overflow-wrap: anywhere; }
 .positioning-read { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .positioning-read strong { font-size: 13px; }
+.market-read-explanation { grid-column: 1 / -1; color: var(--muted); font-size: 11px; line-height: 1.5; }
 .neutral { color: var(--muted); }
 
 .mini-gauges { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 14px; }
@@ -164,6 +224,7 @@ body {
 .mini-gauge-notional { color: var(--muted); font-size: 12px; }
 
 .coin-filter-row { margin-bottom: 12px; }
+.section-search-row { margin: -2px 0 12px; }
 .coin-search {
   width: 100%;
   background: rgba(15, 23, 42, 0.9);
@@ -331,7 +392,8 @@ table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .tracked-whales-panel { overflow: hidden; }
 .tracked-whales-header { align-items: flex-start; }
 .tracked-whales-controls { display: flex; align-items: center; gap: 14px; }
-.table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; background: rgba(8, 13, 24, 0.45); }
+.table-scroll { max-height: 520px; overflow: auto; border: 1px solid var(--border); border-radius: 8px; background: rgba(8, 13, 24, 0.45); }
+thead { position: sticky; top: 0; z-index: 1; background: var(--panel); }
 th:nth-child(1) { width: 70px; }
 th:nth-child(2) { width: 130px; }
 th:nth-child(3) { width: 100px; }
@@ -529,3 +591,27 @@ tr.row-changed td {
   table { min-width: 700px; }
   .modal-panel { max-height: 90vh; }
 }
+
+html[data-theme="light"] {
+  --bg: #f4f7fb;
+  --panel: #ffffff;
+  --border: #d8e0ea;
+  --text: #172033;
+  --muted: #64748b;
+  --accent: #ea580c;
+}
+html[data-theme="light"] body { color-scheme: light; }
+html[data-theme="light"] .notification-feed,
+html[data-theme="light"] .table-scroll,
+html[data-theme="light"] .coin-search { background: #f8fafc; }
+html[data-theme="light"] .positioning-detail,
+html[data-theme="light"] .positioning-read,
+html[data-theme="light"] .modal-position-row,
+html[data-theme="light"] .notification-item,
+html[data-theme="light"] .coin-star-btn,
+html[data-theme="light"] .clear-notifications-btn { background: rgba(15,23,42,0.03); }
+html[data-theme="light"] .coin-tv-btn { color: #2563eb; }
+html[data-theme="light"] .bar { background: #dbe3ed; }
+html[data-theme="light"] .whale-modal-backdrop { background: rgba(15,23,42,0.4); }
+html[data-theme="light"] tbody tr:nth-child(even) td { background: rgba(15,23,42,0.025); }
+html[data-theme="light"] tbody tr:hover td { background: rgba(249,115,22,0.08); }

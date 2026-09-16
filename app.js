@@ -10,6 +10,8 @@ const RETRY_ON_429 = 2;
 const AUTO_REFRESH_MS = 60_000; // interval auto-refresh default: 60 detik
 
 let currentWhaleRows = []; // hasil terakhir, untuk sorting tabel tanpa fetch ulang
+let whaleTableSort = { key: "notional", direction: "desc" };
+let leaderboardSort = { key: "pnl", direction: "desc" };
 let prevSnapshot = null;   // Map<whaleId, Map<coin, {isLong, notional}>> dari refresh sebelumnya
 let autoRefreshTimer = null;
 let notifSoundCtx = null;  // AudioContext dibuat lazy setelah user interaksi pertama (kebijakan browser)
@@ -20,6 +22,9 @@ const CONSENSUS_THRESHOLD = 70;
 let exposureHistory = loadStored(HISTORY_KEY, []);
 let positionHistory = loadStored(POSITION_HISTORY_KEY, []);
 let latestMarketData = {};
+let marketSearchTerm = "";
+let consensusSearchTerm = "";
+const THEME_KEY = "whale-tracker-theme";
 
 function loadStored(key, fallback) {
   try {
@@ -32,6 +37,35 @@ function loadStored(key, fallback) {
 
 function saveStored(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* storage optional */ }
+}
+
+function setupThemeToggle() {
+  const toggle = document.getElementById("themeToggle");
+  if (!toggle) return;
+
+  const applyTheme = (theme) => {
+    const isLight = theme === "light";
+    document.documentElement.dataset.theme = isLight ? "light" : "dark";
+    toggle.classList.toggle("is-light", isLight);
+    toggle.querySelector(".theme-toggle-icon").textContent = isLight ? "☀" : "☾";
+    toggle.querySelector(".theme-toggle-label").textContent = isLight ? "Light" : "Dark";
+    const nextTheme = isLight ? "dark" : "light";
+    toggle.setAttribute("aria-label", `Switch to ${nextTheme} theme`);
+    toggle.setAttribute("title", `Switch to ${nextTheme} theme`);
+  };
+
+  let savedTheme = "dark";
+  try {
+    savedTheme = localStorage.getItem(THEME_KEY) === "light" ? "light" : "dark";
+  } catch {
+    savedTheme = "dark";
+  }
+  applyTheme(savedTheme);
+  toggle.addEventListener("click", () => {
+    const nextTheme = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+    applyTheme(nextTheme);
+    try { localStorage.setItem(THEME_KEY, nextTheme); } catch { /* storage optional */ }
+  });
 }
 
 // ---------- Helpers ----------
@@ -238,11 +272,20 @@ function renderPositioningDetails(totalLong, totalShort) {
   const net = totalLong - totalShort;
   const direction = net > 0 ? "Long bias" : net < 0 ? "Short bias" : "Balanced";
   const directionClass = net > 0 ? "long" : net < 0 ? "short" : "neutral";
+  const total = totalLong + totalShort;
+  const longPct = total > 0 ? (totalLong / total) * 100 : 0;
+  const shortPct = total > 0 ? (totalShort / total) * 100 : 0;
+  const explanation = total === 0
+    ? "Belum ada posisi terbuka yang dapat dibandingkan."
+    : net === 0
+      ? `Long dan short seimbang: ${longPct.toFixed(1)}% long dan ${shortPct.toFixed(1)}% short.`
+      : `${direction} karena notional ${net > 0 ? "long" : "short"} lebih besar (${longPct.toFixed(1)}% long vs ${shortPct.toFixed(1)}% short). Kesimpulan ini merangkum seluruh posisi whale yang dilacak, bukan prediksi harga.`;
   container.innerHTML = `
-    <div class="positioning-detail"><span>Total long</span><strong class="long">$${fmtUsd(totalLong)}</strong></div>
-    <div class="positioning-detail"><span>Total short</span><strong class="short">$${fmtUsd(totalShort)}</strong></div>
-    <div class="positioning-detail"><span>Net exposure</span><strong class="${directionClass}">${fmtUsdSigned(net)}</strong></div>
-    <div class="positioning-read"><span>Market read</span><strong class="${directionClass}">${direction}</strong></div>
+    <div class="positioning-detail"><span>Total Long</span><strong class="long">$${fmtUsd(totalLong)}</strong></div>
+    <div class="positioning-detail"><span>Total Short</span><strong class="short">$${fmtUsd(totalShort)}</strong></div>
+    <div class="positioning-detail"><span>Net Exposure</span><strong class="${directionClass}">${fmtUsdSigned(net)}</strong></div>
+    <div class="positioning-read"><span>Market Read</span><strong class="${directionClass}">${direction}</strong></div>
+    <div class="market-read-explanation">${explanation}</div>
   `;
 }
 
@@ -264,25 +307,27 @@ function getMarketIndication(market, agg, averageOi) {
   const net = (agg?.longNotional || 0) - (agg?.shortNotional || 0);
   const whaleDirection = net > 0 ? "LONG" : net < 0 ? "SHORT" : "NEUTRAL";
   const direction = fundingDirection === whaleDirection && fundingDirection !== "NEUTRAL"
-    ? `${fundingDirection} bias`
+    ? `${fundingDirection} Bias`
     : fundingDirection === "NEUTRAL" && whaleDirection !== "NEUTRAL"
-      ? `${whaleDirection} whale bias`
+      ? `${whaleDirection} Whale Bias`
       : fundingDirection !== "NEUTRAL" && whaleDirection === "NEUTRAL"
-        ? `${fundingDirection} funding bias`
+        ? `${fundingDirection} Funding Bias`
         : fundingDirection === whaleDirection
           ? "Neutral"
           : "Mixed";
   const oiValue = market.openInterest * market.markPx;
-  const participation = averageOi > 0 && oiValue >= averageOi ? "OI tinggi" : "OI rendah";
+  const participation = averageOi > 0 && oiValue >= averageOi ? "OI Tinggi" : "OI Rendah";
   const tone = direction.toLowerCase().includes("long") ? "pos" : direction.toLowerCase().includes("short") ? "neg" : "neutral";
   return { direction, participation, tone };
 }
 
 function renderMarketContext(marketData, coinAgg) {
-  const coins = Object.keys(coinAgg).filter((coin) => marketData[coin]).sort((a, b) => {
+  const allCoins = Object.keys(coinAgg).filter((coin) => marketData[coin]).sort((a, b) => {
     return (coinAgg[b].longNotional + coinAgg[b].shortNotional) - (coinAgg[a].longNotional + coinAgg[a].shortNotional);
-  }).slice(0, 8);
-  const averageOi = coins.length ? coins.reduce((sum, coin) => sum + (marketData[coin].openInterest * marketData[coin].markPx), 0) / coins.length : 0;
+  });
+  const averageOi = allCoins.length ? allCoins.reduce((sum, coin) => sum + (marketData[coin].openInterest * marketData[coin].markPx), 0) / allCoins.length : 0;
+  const search = marketSearchTerm.trim().toLowerCase();
+  const coins = search ? allCoins.filter((coin) => coin.toLowerCase().includes(search)) : allCoins;
   const container = document.getElementById("marketContext");
   if (!container) return;
   container.innerHTML = coins.length ? coins.map((coin) => {
@@ -295,24 +340,40 @@ function renderMarketContext(marketData, coinAgg) {
       <span class="market-indication ${indication.tone}">${indication.direction} · ${indication.participation}</span>
       <span>Mark <b>$${market.markPx ? market.markPx.toFixed(market.markPx < 10 ? 4 : 2) : "-"}</b></span>
     </div>`;
-  }).join("") : '<div class="empty-state">Market context unavailable</div>';
+  }).join("") : `<div class="empty-state">${allCoins.length ? "No Matching Market Coin" : "Market Context Unavailable"}</div>`;
 }
 
 function renderConsensus(coinAgg) {
-  const rows = Object.entries(coinAgg).map(([coin, agg]) => {
+  const allRows = Object.entries(coinAgg).map(([coin, agg]) => {
     const longCount = agg.longWhales.size;
     const shortCount = agg.shortWhales.size;
     const total = longCount + shortCount;
     const longPct = total ? (longCount / total) * 100 : 50;
     const consensus = Math.max(longPct, 100 - longPct);
     return { coin, longCount, shortCount, longPct, consensus };
-  }).filter((row) => row.consensus >= CONSENSUS_THRESHOLD).sort((a, b) => b.consensus - a.consensus).slice(0, 8);
+  }).filter((row) => row.consensus >= CONSENSUS_THRESHOLD).sort((a, b) => b.consensus - a.consensus);
+  const search = consensusSearchTerm.trim().toLowerCase();
+  const rows = search ? allRows.filter((row) => row.coin.toLowerCase().includes(search)) : allRows;
   const container = document.getElementById("consensusList");
   if (!container) return;
   container.innerHTML = rows.length ? rows.map((row) => {
     const side = row.longPct >= 50 ? "LONG" : "SHORT";
     return `<div class="consensus-row"><div><strong>${row.coin}</strong><span class="consensus-side ${side.toLowerCase()}">${side} ${row.consensus.toFixed(0)}%</span></div><span>${row.longCount} L · ${row.shortCount} S</span></div>`;
-  }).join("") : '<div class="empty-state">No strong consensus yet</div>';
+  }).join("") : `<div class="empty-state">${allRows.length ? "No Matching Consensus Coin" : "No Strong Consensus Yet"}</div>`;
+}
+
+function setupInsightSearch() {
+  const marketInput = document.getElementById("marketSearchInput");
+  marketInput?.addEventListener("input", (event) => {
+    marketSearchTerm = event.target.value;
+    renderMarketContext(latestMarketData, window.latestCoinAgg || {});
+  });
+
+  const consensusInput = document.getElementById("consensusSearchInput");
+  consensusInput?.addEventListener("input", (event) => {
+    consensusSearchTerm = event.target.value;
+    renderConsensus(window.latestCoinAgg || {});
+  });
 }
 
 function renderExposureHistory() {
@@ -330,16 +391,18 @@ function renderPositionHistory() {
   const container = document.getElementById("positionHistory");
   if (!container) return;
   container.innerHTML = positionHistory.length ? positionHistory.slice(-12).reverse().map((item) => `
-    <div class="history-row"><span class="history-time">${item.time}</span><span>${item.text}</span></div>`).join("") : '<div class="empty-state">Belum ada history</div>';
+    <div class="history-row"><span class="history-time">${item.time}</span><span>${item.text}</span></div>`).join("") : '<div class="empty-state">Belum ada riwayat</div>';
 }
 
 function renderPnlLeaderboard(whaleRows) {
-  const rows = whaleRows.filter((whale) => !whale.error).sort((a, b) => b.totalUpnl - a.totalUpnl).slice(0, 8);
+  const rows = whaleRows.filter((whale) => !whale.error).sort((a, b) =>
+    leaderboardSort.direction === "asc" ? a.totalUpnl - b.totalUpnl : b.totalUpnl - a.totalUpnl
+  );
   const container = document.getElementById("pnlLeaderboard");
   if (!container) return;
   container.innerHTML = rows.length ? rows.map((whale, index) => {
     const walletUrl = `https://hypurrscan.io/address/${encodeURIComponent(whale.address)}#txs`;
-    return `<div class="leader-row"><span class="leader-rank">${index + 1}</span><strong><a class="leader-whale-link" href="${walletUrl}" target="_blank" rel="noopener noreferrer" title="Open Whale #${whale.id} on Hypurrscan">Whale #${whale.id}</a></strong><span>${whale.allPositions.length} positions</span><b class="${whale.totalUpnl >= 0 ? "pos" : "neg"}">${fmtUsdSigned(whale.totalUpnl)}</b></div>`;
+    return `<div class="leader-row"><span class="leader-rank">${index + 1}</span><strong><a class="leader-whale-link" href="${walletUrl}" target="_blank" rel="noopener noreferrer" title="Open Whale #${whale.id} on Hypurrscan">Whale #${whale.id}</a></strong><span>${whale.allPositions.length} Positions</span><b class="${whale.totalUpnl >= 0 ? "pos" : "neg"}">${fmtUsdSigned(whale.totalUpnl)}</b></div>`;
   }).join("") : '<div class="empty-state">Belum ada data</div>';
 }
 
@@ -427,7 +490,7 @@ function renderCoinList(coinAgg, searchTerm = coinSearchTerm) {
             ${deltaBadge}
           </div>
           <div class="coin-actions">
-            <span class="net-pos ${net >= 0 ? "pos" : "neg"}">net ${fmtUsdSigned(net)}</span>
+            <span class="net-pos ${net >= 0 ? "pos" : "neg"}">Net ${fmtUsdSigned(net)}</span>
             <a class="coin-tv-btn" href="${tvUrl}" target="_blank" rel="noopener noreferrer" title="Open ${coin} chart on TradingView">Chart</a>
           </div>
         </div>
@@ -436,9 +499,9 @@ function renderCoinList(coinAgg, searchTerm = coinSearchTerm) {
           <div class="bar-short" style="width:${100 - longPct}%"></div>
         </div>
         <div class="coin-row-bottom">
-          <span>$${fmtUsd(agg.longNotional)} long · ${agg.longWhales.size} whale${agg.longWhales.size !== 1 ? "s" : ""}</span>
+          <span>$${fmtUsd(agg.longNotional)} Long · ${agg.longWhales.size} Whale${agg.longWhales.size !== 1 ? "s" : ""}</span>
           <span>${longPct.toFixed(1)}% L</span>
-          <span>${agg.shortWhales.size} whale${agg.shortWhales.size !== 1 ? "s" : ""} · $${fmtUsd(agg.shortNotional)} short</span>
+          <span>${agg.shortWhales.size} Whale${agg.shortWhales.size !== 1 ? "s" : ""} · $${fmtUsd(agg.shortNotional)} Short</span>
         </div>
       </div>`;
   }).join("");
@@ -481,9 +544,7 @@ function renderWhaleTable(whaleRows) {
   currentWhaleRows = whaleRows;
   const tbody = document.getElementById("whaleTableBody");
 
-  const rowsToShow = showAllPositions
-    ? whaleRows.filter((w) => w.allPositions.length > 0 || w.error)
-    : whaleRows.filter((w) => w.smallPositions.length > 0 || w.error);
+  const rowsToShow = whaleRows;
 
   if (rowsToShow.length === 0) {
     const msg = showAllPositions
@@ -494,7 +555,17 @@ function renderWhaleTable(whaleRows) {
   }
 
   const totalOf = (w) => showAllPositions ? w.totalNotional : w.smallPositions.reduce((s, p) => s + p.notional, 0);
-  const sorted = [...rowsToShow].sort((a, b) => b.totalNotional - a.totalNotional);
+  const valueOf = (whale) => {
+    if (whaleTableSort.key === "pnl") return whale.totalUpnl;
+    if (whaleTableSort.key === "account") return whale.accountValue ?? -Infinity;
+    return showAllPositions
+      ? whale.totalNotional
+      : whale.smallPositions.reduce((sum, position) => sum + position.notional, 0);
+  };
+  const sorted = [...rowsToShow].sort((a, b) => {
+    const difference = valueOf(b) - valueOf(a);
+    return whaleTableSort.direction === "asc" ? -difference : difference;
+  });
   const MAX_BADGES = 4;
 
   tbody.innerHTML = sorted.map((w, rowIdx) => {
@@ -545,7 +616,7 @@ function renderWhaleTable(whaleRows) {
     btn.addEventListener("click", () => {
       const target = document.getElementById(btn.dataset.target);
       const isHidden = target.hasAttribute("hidden");
-      if (isHidden) { target.removeAttribute("hidden"); btn.textContent = "tutup"; }
+      if (isHidden) { target.removeAttribute("hidden"); btn.textContent = "Tutup"; }
       else { target.setAttribute("hidden", ""); btn.textContent = "+" + target.children.length; }
     });
   });
@@ -620,28 +691,31 @@ function renderSummary({ coinAgg, whaleRows, totalNotionalAll }) {
 document.querySelectorAll("th[data-sort]").forEach((th) => {
   th.addEventListener("click", () => {
     const key = th.dataset.sort;
-    const predicate = showAllPositions
-      ? (w) => w.allPositions.length > 0 || w.error
-      : (w) => w.smallPositions.length > 0 || w.error;
-    const sorted = [...currentWhaleRows].filter(predicate);
-    sorted.sort((a, b) => {
-      const valueOf = (w) => {
-        if (key === "pnl") return w.totalUpnl;
-        if (key === "account") return w.accountValue ?? -Infinity;
-        return w.totalNotional;
-      };
-      return valueOf(b) - valueOf(a);
-    });
-    renderWhaleTableFromSorted(sorted);
+    if (whaleTableSort.key === key) {
+      whaleTableSort.direction = whaleTableSort.direction === "desc" ? "asc" : "desc";
+    } else {
+      whaleTableSort = { key, direction: "desc" };
+    }
+    updateSortHeader(th, whaleTableSort.direction);
+    renderWhaleTable(currentWhaleRows);
   });
 });
-function renderWhaleTableFromSorted(sorted) {
-  // reuse render logic by temporarily swapping order
-  const original = currentWhaleRows;
-  currentWhaleRows = sorted;
-  renderWhaleTable(sorted);
-  currentWhaleRows = original;
+
+function updateSortHeader(activeHeader, direction) {
+  document.querySelectorAll("th[data-sort]").forEach((header) => {
+    const labels = { account: "ACCOUNT VALUE", notional: "NOTIONAL", pnl: "UPNL" };
+    const label = labels[header.dataset.sort] || header.dataset.sort.toUpperCase();
+    header.textContent = header === activeHeader ? `${label} ${direction === "asc" ? "↑" : "↓"}` : `${label} ⇅`;
+  });
 }
+
+document.querySelectorAll(".leaderboard-sort-btn").forEach((button) => {
+  button.addEventListener("click", () => {
+    leaderboardSort.direction = leaderboardSort.direction === "desc" ? "asc" : "desc";
+    button.textContent = `PnL ${leaderboardSort.direction === "desc" ? "↓" : "↑"}`;
+    renderPnlLeaderboard(currentWhaleRows);
+  });
+});
 
 // ---------- Toggle tampilkan semua posisi ----------
 function setupShowAllToggle() {
@@ -881,11 +955,11 @@ function openWhaleModal(whale) {
   body.innerHTML = `
     <div class="modal-meta">
       <div>Address: ${whale.address}</div>
-      <div>Account value: $${whale.accountValue !== null ? fmtUsd(whale.accountValue) : "n/a"}</div>
-      <div>Total notional: $${fmtUsd(totalNotional)} · UPNL: ${fmtUsdSigned(totalUpnl)}</div>
+      <div>Account Value: $${whale.accountValue !== null ? fmtUsd(whale.accountValue) : "N/A"}</div>
+      <div>Total Notional: $${fmtUsd(totalNotional)} · UPNL: ${fmtUsdSigned(totalUpnl)}</div>
     </div>
     <div class="modal-positions">
-      ${positions.length === 0 ? '<div class="empty-state">No open positions</div>' : positions.map((p) => `
+      ${positions.length === 0 ? '<div class="empty-state">No Open Positions</div>' : positions.map((p) => `
         <div class="modal-position-row">
           <div class="coin">${p.coin}</div>
           <span class="side ${p.isLong ? "long" : "short"}">${p.isLong ? "LONG" : "SHORT"}</span>
@@ -1008,9 +1082,11 @@ document.getElementById("clearNotificationsBtn")?.addEventListener("click", () =
 });
 
 setupAutoRefreshToggle();
+setupThemeToggle();
 setupShowAllToggle();
 setupCoinSearch();
 setupCoinFilterButtons();
+setupInsightSearch();
 setupWhaleModalEvents();
 renderRecentNotifications();
 renderPositionHistory();

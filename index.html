@@ -4,19 +4,21 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>wootangscan Hyperliquid</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
 <div class="topbar">
   <div class="brand">🐋 <span>wootang<span class="accent">scan</span></span></div>
-  <div class="updated">
-    <span id="lastUpdated">Belum pernah update</span>
-    <label class="auto-refresh-toggle">
-      <input type="checkbox" id="autoRefreshToggle" />
-      <span id="autoRefreshLabel">Auto-refresh OFF</span>
-    </label>
-    <button id="refreshBtn" class="refresh-btn">Refresh Data</button>
+  <div class="topbar-actions">
+    <button id="themeToggle" class="theme-toggle" type="button" aria-label="Switch to light theme" title="Switch to light theme">
+      <span class="theme-toggle-icon" aria-hidden="true">☾</span>
+      <span class="theme-toggle-track"><span class="theme-toggle-thumb"></span></span>
+      <span class="theme-toggle-label">Dark</span>
+    </button>
   </div>
 </div>
 
@@ -26,7 +28,7 @@
 
   <div class="notification-feed" aria-live="polite">
     <div class="notification-feed-header">
-      <span>Recent changes</span>
+      <span>Recent Changes</span>
       <button id="clearNotificationsBtn" class="clear-notifications-btn" type="button">Clear</button>
     </div>
     <div id="notificationHistory" class="notification-history">
@@ -57,7 +59,7 @@
     <div class="panel">
       <div class="panel-header">
         <div class="panel-title">Whale Positioning</div>
-        <div class="panel-sub">by notional</div>
+        <div class="panel-sub">By notional</div>
       </div>
       <div class="gauge-wrap">
         <svg id="gaugeSvg" viewBox="0 0 200 115" width="280">
@@ -70,20 +72,21 @@
           <span class="long" id="gaugeLongLabel">Long –%</span>
           <span class="short" id="gaugeShortLabel">Short –%</span>
         </div>
-        <div class="gauge-note">Porsi long vs short dari total notional posisi terbuka whale yang di-track. Bukan arah market.</div>
+        <div class="gauge-note">Porsi long vs short dari total notional posisi terbuka whale yang dilacak. Bukan arah market.</div>
         <div id="positioningDetails" class="positioning-details">
-          <div class="positioning-detail"><span>Total long</span><strong class="long">–</strong></div>
-          <div class="positioning-detail"><span>Total short</span><strong class="short">–</strong></div>
-          <div class="positioning-detail"><span>Net exposure</span><strong>–</strong></div>
-          <div class="positioning-read"><span>Market read</span><strong>Belum ada data</strong></div>
+          <div class="positioning-detail"><span>Total Long</span><strong class="long">–</strong></div>
+          <div class="positioning-detail"><span>Total Short</span><strong class="short">–</strong></div>
+          <div class="positioning-detail"><span>Net Exposure</span><strong>–</strong></div>
+          <div class="positioning-read"><span>Market Read</span><strong>Belum ada data</strong></div>
+          <div id="marketReadExplanation" class="market-read-explanation">Arah market akan dihitung dari perbandingan total notional posisi long dan short seluruh whale yang dilacak.</div>
         </div>
       </div>
     </div>
 
     <div class="panel">
       <div class="panel-header">
-        <div class="panel-title">Positioning per coin</div>
-        <div class="panel-sub">long vs short by notional</div>
+        <div class="panel-title">Positioning per Coin</div>
+        <div class="panel-sub">Long vs. short by notional</div>
       </div>
       <div class="coin-toolbar">
         <div class="coin-filter-group">
@@ -94,7 +97,7 @@
         </div>
       </div>
       <div class="coin-filter-row">
-        <input id="coinSearchInput" class="coin-search" type="search" placeholder="Search coin" aria-label="Search coin" />
+        <input id="coinSearchInput" class="coin-search" type="search" placeholder="Search Coin" aria-label="Search Coin" />
       </div>
       <div class="coin-scroll" id="coinList">
         <div class="empty-state">Belum ada data</div>
@@ -105,35 +108,42 @@
   <div class="insight-grid">
     <div class="panel">
       <div class="panel-header">
-        <div class="panel-title">Market context</div>
-        <div class="panel-sub">Hyperliquid perp data</div>
+        <div class="panel-title">Market Context</div>
+        <div class="panel-sub">Hyperliquid Perp Data</div>
       </div>
-      <div id="marketContext" class="market-context"><div class="empty-state">Refresh data to load market context</div></div>
+      <div class="section-search-row">
+        <input id="marketSearchInput" class="coin-search" type="search" placeholder="Search Market Coin" aria-label="Search Market Context Coin" />
+      </div>
+      <div id="marketContext" class="market-context"><div class="empty-state">Refresh Data untuk memuat Market Context</div></div>
       <div class="market-guide"><strong>Arti metrik:</strong> <span class="long">OI</span> adalah total nilai posisi futures yang masih terbuka; OI naik berarti partisipasi/posisi bertambah, tetapi tidak menunjukkan long atau short. <span class="long">Funding</span> adalah biaya berkala antar trader perpetual; positif biasanya long membayar short, negatif short membayar long. <strong>Indikasi</strong> menggabungkan arah funding dengan net positioning whale, sedangkan OI menunjukkan seberapa kuat partisipasinya. Ini bukan sinyal beli/jual otomatis.</div>
     </div>
     <div class="panel">
       <div class="panel-header">
-        <div class="panel-title">Whale consensus</div>
-        <div class="panel-sub">coins with strongest agreement</div>
+        <div class="panel-title">Whale Consensus</div>
+        <div class="panel-sub">Coins with strongest agreement</div>
+      </div>
+      <div class="section-search-row">
+        <input id="consensusSearchInput" class="coin-search" type="search" placeholder="Search Consensus Coin" aria-label="Search Whale Consensus Coin" />
       </div>
       <div id="consensusList" class="consensus-list"><div class="empty-state">Belum ada data</div></div>
+      <div class="market-guide"><strong>Arti metrik:</strong> <span class="long">LONG</span> dan <span class="short">SHORT</span> menunjukkan arah posisi whale pada coin tersebut. Persentase consensus adalah porsi whale yang berada di sisi mayoritas; semakin tinggi nilainya, semakin kuat kesepakatannya. Angka <span class="long">L</span> adalah jumlah whale yang memiliki posisi long, sedangkan <span class="short">S</span> adalah jumlah whale yang memiliki posisi short. Consensus ini hanya menggambarkan posisi whale yang sedang terpantau, bukan sinyal beli/jual otomatis.</div>
     </div>
   </div>
 
   <div class="insight-grid history-grid">
     <div class="panel">
       <div class="panel-header">
-        <div class="panel-title">Net exposure history</div>
-        <div class="panel-sub">last 20 refreshes</div>
+        <div class="panel-title">Net Exposure History</div>
+        <div class="panel-sub">Last 20 refreshes</div>
       </div>
-      <div id="exposureChart" class="exposure-chart"><div class="empty-state">Belum ada history</div></div>
+      <div id="exposureChart" class="exposure-chart"><div class="empty-state">Belum ada riwayat</div></div>
     </div>
     <div class="panel">
       <div class="panel-header">
-        <div class="panel-title">Position history</div>
-        <div class="panel-sub">recent whale actions</div>
+        <div class="panel-title">Position History</div>
+        <div class="panel-sub">Recent whale actions</div>
       </div>
-      <div id="positionHistory" class="position-history"><div class="empty-state">Belum ada history</div></div>
+      <div id="positionHistory" class="position-history"><div class="empty-state">Belum ada riwayat</div></div>
     </div>
   </div>
 
@@ -143,13 +153,13 @@
 
   <div class="panel tracked-whales-panel">
     <div class="panel-header tracked-whales-header">
-      <div class="panel-title">Tracked whales</div>
+      <div class="panel-title">Tracked Whales</div>
       <div class="tracked-whales-controls">
         <label class="auto-refresh-toggle">
           <input type="checkbox" id="showAllToggle" />
           <span>Tampilkan semua posisi</span>
         </label>
-        <div class="panel-sub" id="tableSubtitle">posisi &lt;$1M per coin, posisi terbuka saat ini</div>
+        <div class="panel-sub" id="tableSubtitle">Posisi &lt;$1M per coin, posisi terbuka saat ini</div>
       </div>
     </div>
     <div class="table-scroll">
@@ -158,7 +168,7 @@
         <tr>
           <th>#</th>
           <th>ADDRESS</th>
-          <th>ACCOUNT VALUE</th>
+          <th data-sort="account">ACCOUNT VALUE ⇅</th>
           <th id="posColHeader">POSISI (&lt;$1M)</th>
           <th data-sort="notional">NOTIONAL ▾</th>
           <th data-sort="pnl">UPNL ⇅</th>
@@ -173,10 +183,20 @@
 
   <div class="panel leaderboard-panel">
     <div class="panel-header">
-      <div class="panel-title">PnL leaderboard</div>
-      <div class="panel-sub">current unrealized PnL</div>
+      <div class="panel-title">PnL Leaderboard</div>
+      <div class="leaderboard-controls">
+        <button class="leaderboard-sort-btn active" data-leaderboard-sort="pnl" type="button">PnL ↓</button>
+      </div>
     </div>
     <div id="pnlLeaderboard" class="leaderboard"><div class="empty-state">Belum ada data</div></div>
+    <div class="updated leaderboard-footer">
+      <span id="lastUpdated">Belum pernah update</span>
+      <label class="auto-refresh-toggle">
+        <input type="checkbox" id="autoRefreshToggle" />
+        <span id="autoRefreshLabel">Auto-refresh OFF</span>
+      </label>
+      <button id="refreshBtn" class="refresh-btn">Refresh Data</button>
+    </div>
   </div>
 
 </div>
@@ -186,7 +206,7 @@
   <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="whaleModalTitle">
     <div class="modal-header">
       <div>
-        <div class="modal-kicker">Whale detail</div>
+        <div class="modal-kicker">Whale Detail</div>
         <h3 id="whaleModalTitle">Whale</h3>
       </div>
       <button id="whaleModalClose" class="modal-close" type="button" aria-label="Close">×</button>
