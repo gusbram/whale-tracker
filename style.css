@@ -56,8 +56,12 @@ body {
 .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .theme-toggle {
+  appearance: none;
+  -webkit-appearance: none;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
   gap: 6px;
   border: 0;
   padding: 0;
@@ -65,14 +69,17 @@ body {
   color: var(--muted);
   font: inherit;
   font-size: 12px;
+  line-height: 17px;
   cursor: pointer;
 }
-.theme-toggle-icon { width: 14px; text-align: center; font-size: 15px; line-height: 1; }
+.theme-toggle-icon { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 17px; text-align: center; font-size: 15px; line-height: 17px; }
 .theme-toggle-track {
   position: relative;
   display: inline-block;
+  flex: 0 0 30px;
   width: 30px;
   height: 17px;
+  box-sizing: border-box;
   border: 1px solid var(--muted);
   border-radius: 999px;
   background: rgba(255,255,255,0.08);
