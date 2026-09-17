@@ -476,8 +476,8 @@ function renderCoinList(coinAgg, searchTerm = coinSearchTerm) {
     const total = agg.longNotional + agg.shortNotional;
     const longPct = total > 0 ? (agg.longNotional / total) * 100 : 0;
     const net = agg.longNotional - agg.shortNotional;
-    const tvSymbol = `${String(coin).trim().toUpperCase()}USDT`;
-    const tvUrl = `https://www.tradingview.com/search/?q=${encodeURIComponent(tvSymbol)}`;
+    const tvSymbol = `${String(coin).trim().toUpperCase()}USDT.P`;
+    const tvUrl = `https://id.tradingview.com/symbols/${encodeURIComponent(tvSymbol)}/`;
     const isFavorite = favoriteCoins.has(coin.toUpperCase());
     const deltaBadge = getCoinDeltaBadge(coin, previousCoinSummary, window.latestCoinSummary || {});
 
