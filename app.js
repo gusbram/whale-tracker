@@ -645,11 +645,13 @@ function renderSummary({ coinAgg, whaleRows, totalNotionalAll }) {
   }
   const total = totalLong + totalShort;
   const longPct = total > 0 ? (totalLong / total) * 100 : 0;
+  const biasPct = longPct >= 50 ? longPct : 100 - longPct;
+  const biasDirection = longPct >= 50 ? "long" : "short";
 
   document.getElementById("statWhales").textContent = whaleRows.filter((w) => !w.error).length;
   document.getElementById("statNotional").textContent = "$" + fmtUsd(total);
-  document.getElementById("statBias").textContent = longPct.toFixed(1) + "% " + (longPct >= 50 ? "long" : "short");
-  document.getElementById("statBias").className = "stat-value " + (longPct >= 50 ? "long" : "");
+  document.getElementById("statBias").textContent = biasPct.toFixed(1) + "% " + biasDirection;
+  document.getElementById("statBias").className = "stat-value " + biasDirection;
   document.getElementById("statBias").style.color = longPct >= 50 ? "var(--green)" : "var(--red)";
 
   // Top net position across coins
