@@ -6,25 +6,36 @@
 <title>wootangscan Hyperliquid</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=f039780" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css?v=20261007" />
 </head>
 <body>
 
-<div class="topbar">
-  <div class="brand">🐋 <span>wootang<span class="accent">scan</span></span></div>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">🐋</span>
+    <span class="brand-copy">
+      <span class="brand-name">wootang<span class="accent">scan</span></span>
+      <span class="brand-caption">HYPERLIQUID · WHALE POSITION MONITOR</span>
+    </span>
+  </div>
   <div class="topbar-actions">
+    <label class="auto-refresh-toggle">
+      <input type="checkbox" id="autoRefreshToggle" />
+      <span id="autoRefreshLabel">Auto-refresh OFF</span>
+    </label>
+    <button id="refreshBtn" class="refresh-btn" type="button">Refresh Data</button>
     <button id="themeToggle" class="theme-toggle" type="button" aria-label="Switch to light theme" title="Switch to light theme">
       <span class="theme-toggle-icon" aria-hidden="true">☾</span>
       <span class="theme-toggle-track"><span class="theme-toggle-thumb"></span></span>
       <span class="theme-toggle-label">Dark</span>
     </button>
   </div>
-</div>
+</header>
 
-<div class="container">
+<main class="container">
 
-  <div id="statusLine" class="status-line">Klik "Refresh Data" untuk mulai mengambil data dari Hyperliquid API.</div>
+  <div id="statusLine" class="status-line" role="status" aria-live="polite">Klik "Refresh Data" untuk mulai mengambil data dari Hyperliquid API.</div>
 
   <div class="notification-feed" aria-live="polite">
     <div class="notification-feed-header">
@@ -166,12 +177,12 @@
     <table>
       <thead>
         <tr>
-          <th>#</th>
-          <th>ADDRESS</th>
-          <th data-sort="account">ACCOUNT VALUE ⇅</th>
-          <th id="posColHeader">POSISI (&lt;$1M)</th>
-          <th data-sort="notional">NOTIONAL ▾</th>
-          <th data-sort="pnl">UPNL ⇅</th>
+          <th scope="col">#</th>
+          <th scope="col">ADDRESS</th>
+          <th scope="col" data-sort="account">ACCOUNT VALUE ⇅</th>
+          <th scope="col" id="posColHeader">POSISI (&lt;$1M)</th>
+          <th scope="col" data-sort="notional">NOTIONAL ▾</th>
+          <th scope="col" data-sort="pnl">UPNL ⇅</th>
         </tr>
       </thead>
       <tbody id="whaleTableBody">
@@ -191,15 +202,10 @@
     <div id="pnlLeaderboard" class="leaderboard"><div class="empty-state">Belum ada data</div></div>
     <div class="updated leaderboard-footer">
       <span id="lastUpdated">Belum pernah update</span>
-      <label class="auto-refresh-toggle">
-        <input type="checkbox" id="autoRefreshToggle" />
-        <span id="autoRefreshLabel">Auto-refresh OFF</span>
-      </label>
-      <button id="refreshBtn" class="refresh-btn">Refresh Data</button>
     </div>
   </div>
 
-</div>
+</main>
 
 <div id="whaleModal" class="modal hidden" aria-hidden="true">
   <div class="modal-backdrop" data-close-modal="true"></div>
